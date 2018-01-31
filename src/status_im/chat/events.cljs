@@ -154,7 +154,7 @@
     (update-in db [:chats chat-id :messages message-id] assoc :new? false)))
 
 (defn init-console-chat
-  [{:keys [chats] :accounts/keys [current-account-id] :as db}]
+  [{:keys [chats] :accounts/keys [account] :as db}]
   (if (chats const/console-chat-id)
     {:db db}
     (cond-> {:db (-> db
@@ -164,7 +164,7 @@
              :save-chat console-chat/chat
              :save-all-contacts [console-chat/contact]}
 
-      (not current-account-id)
+      (not (:address account))
       (update :dispatch-n concat [[:chat-received-message/add-when-commands-loaded console-chat/intro-message1]]))))
 
 
@@ -292,8 +292,8 @@
    (navigate-to-chat cofx chat-id false))
   ([cofx chat-id navigation-replace?]
    (let [nav-fn (if navigation-replace?
-                  #(navigation/navigate-to % :chat)
-                  #(navigation/replace-view % :chat))]
+                  #(navigation/replace-view % :chat)
+                  #(navigation/navigate-to % :chat))]
      (-> (preload-chat-data cofx chat-id)
          (update :db nav-fn)))))
 
