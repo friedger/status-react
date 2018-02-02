@@ -1,25 +1,23 @@
 (ns status-im.data-store.realm.chats
   (:require [goog.object :as object]
             [status-im.data-store.realm.core :as realm]
+            [status-im.data-store.realm.messages :as messages]
             [status-im.utils.random :refer [timestamp]]
             [taoensso.timbre :as log])
   (:refer-clojure :exclude [exists?]))
 
-(defn get-all
-  []
-  (-> @realm/account-realm
-      (realm/get-all :chat)
-      (realm/sorted :timestamp :desc)))
-
-(defn get-all-as-list
-  []
-  (realm/js-object->clj (get-all)))
+(defn- normalize-chat [{:keys [chat-id] :as chat}]
+  (let [last-message (messages/get-last-message chat-id)]
+    (-> chat
+        (realm/fix-map->vec :contacts)
+        (assoc :last-clock-value (or (:clock-value last-message) 0)))))
 
 (defn get-all-active
   []
-  (-> (realm/get-by-field @realm/account-realm :chat :is-active true)
-      (realm/sorted :timestamp :desc)
-      realm/js-object->clj))
+  (map normalize-chat
+       (-> (realm/get-by-field @realm/account-realm :chat :is-active true)
+           (realm/sorted :timestamp :desc)
+           realm/js-object->clj)))
 
 (defn get-inactive-ids
   []
@@ -31,9 +29,11 @@
 
 (defn- groups
   [active?]
-  (realm/filtered (get-all)
-                  (str "group-chat = true && is-active = "
-                       (if active? "true" "false"))))
+  (-> @realm/account-realm
+      (realm/get-all :chat)
+      (realm/sorted :timestamp :desc)
+      (realm/filtered (str "group-chat = true && is-active = "
+                           (if active? "true" "false")))))
 
 (defn get-active-group-chats
   []
@@ -54,7 +54,7 @@
   [chat-id]
   (-> @realm/account-realm
       (realm/get-one-by-field-clj :chat :chat-id chat-id)
-      (realm/fix-map->vec :contacts)))
+      normalize-chat))
 
 (defn save
   [chat update?]

@@ -15,6 +15,7 @@
             [status-im.data-store.contacts :as contacts-store]
             [status-im.data-store.requests :as requests-store]
             [status-im.data-store.messages :as messages-store]
+            [status-im.data-store.pending-messages :as pending-messages-store]
             [status-im.ui.screens.navigation :as navigation]
             [status-im.protocol.core :as protocol]
             [status-im.constants :as const]
@@ -59,14 +60,14 @@
     (assoc cofx :all-stored-chats (chats-store/get-all))))
 
 (re-frame/reg-cofx
+  :get-stored-chat
+  (fn [cofx _]
+    (assoc cofx :get-stored-chat chats-store/get-by-id)))
+
+(re-frame/reg-cofx
   :inactive-chat-ids
   (fn [cofx _]
     (assoc cofx :inactive-chat-ids (chats-store/get-inactive-ids))))
-
-(re-frame/reg-cofx
-  :get-last-clock-value
-  (fn [cofx]
-    (assoc cofx :get-last-clock-value messages-store/get-last-clock-value)))
 
 ;;;; Effects
 
@@ -83,6 +84,13 @@
     (async/put! realm-queue #(messages-store/save message))))
 
 (re-frame/reg-fx
+  :delete-chat-messages
+  (fn [{:keys [chat-id group-chat debug?]}]
+    (when (or group-chat debug?)
+      (async/put! realm-queue #(messages-store/delete-by-chat-id chat-id)))
+    (async/put! realm-queue #(pending-messages-store/delete-all-by-chat-id chat-id))))
+
+(re-frame/reg-fx
   :update-message-overhead
   (fn [[chat-id network-status]]
     (let [update-fn (if (= network-status :offline)
@@ -94,6 +102,13 @@
   :save-chat
   (fn [chat]
     (async/put! realm-queue #(chats-store/save chat))))
+
+(re-frame/reg-fx
+  :delete-chat
+  (fn [{:keys [chat-id debug?]}]
+    (if debug?
+      (async/put! realm-queue #(chats-store/delete chat-id))
+      (async/put! realm-queue #(chats-store/set-inactive chat-id)))))
 
 (re-frame/reg-fx
   :save-all-contacts
@@ -186,16 +201,14 @@
    (re-frame/inject-cofx :get-stored-messages)
    (re-frame/inject-cofx :stored-unviewed-messages)
    (re-frame/inject-cofx :stored-message-ids)
-   (re-frame/inject-cofx :get-stored-unanswered-requests)
-   (re-frame/inject-cofx :get-last-clock-value)]
+   (re-frame/inject-cofx :get-stored-unanswered-requests)]
   (fn [{:keys [db
                all-stored-chats
                inactive-chat-ids
                stored-unanswered-requests
                get-stored-messages
                stored-unviewed-messages
-               stored-message-ids
-               get-last-clock-value]} _]
+               stored-message-ids]} _]
     (let [{:accounts/keys [account-creation?]} db
           load-default-contacts-event [:load-default-contacts!]]
       (if account-creation?
@@ -209,7 +222,6 @@
                               (let [chat-messages (index-messages (get-stored-messages chat-id))]
                                 (assoc acc chat-id
                                        (assoc chat
-                                              :last-clock-value       (get-last-clock-value chat-id)
                                               :unviewed-messages      (get stored-unviewed-messages chat-id)
                                               :requests               (get chat->message-id->request chat-id)
                                               :messages               chat-messages
@@ -289,7 +301,7 @@
 
 (handlers/register-handler-fx
   :add-chat-loaded-event
-  [re-frame/trim-v]
+  [(re-frame/inject-cofx :get-stored-chat) re-frame/trim-v]
   (fn [{:keys [db] :as cofx} [chat-id event]]
     (if (get (:chats db) chat-id)
       {:db (assoc-in db [:chats chat-id :chat-loaded-event] event)}
@@ -299,7 +311,7 @@
 ;; TODO(janherich): remove this unnecessary event in the future (only model function `add-chat` will stay)
 (handlers/register-handler-fx
   :add-chat
-  [re-frame/trim-v]
+  [(re-frame/inject-cofx :get-stored-chat) re-frame/trim-v]
   (fn [cofx [chat-id chat-props]]
     (model/add-chat cofx chat-id chat-props)))
 
@@ -322,7 +334,7 @@
 
 (handlers/register-handler-fx
   :start-chat
-  [re-frame/trim-v]
+  [(re-frame/inject-cofx :get-stored-chat) re-frame/trim-v]
   (fn [{:keys [db] :as cofx} [contact-id {:keys [navigation-replace?]}]]
     (when (not= (:current-public-key db) contact-id) ; don't allow to open chat with yourself
       (if (get (:chats db) contact-id)
@@ -339,3 +351,14 @@
   [re-frame/trim-v]
   (fn [cofx [chat]]
     (model/update-chat cofx chat)))
+
+(handlers/register-handler-fx
+  :remove-chat
+  [re-frame/trim-v]
+  (fn [{:keys [db]} [chat-id]]
+    (let [chat (get-in db [:chats chat-id])]
+      {:db                  (-> db
+                                (update :chats dissoc chat-id)
+                                (update :deleted-chats (fnil conj #{}) chat-id))
+       :delete-chat          chat
+       :delete-chat-messages chat})))

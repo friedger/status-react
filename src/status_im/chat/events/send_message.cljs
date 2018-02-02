@@ -1,15 +1,11 @@
 (ns status-im.chat.events.send-message
   (:require [re-frame.core :as re-frame] 
             [status-im.chat.models.message :as message-model]
-            [status-im.constants :as constants]
-            [status-im.data-store.chats :as chats-store]
+            [status-im.constants :as constants] 
             [status-im.native-module.core :as status]
-            [status-im.protocol.core :as protocol]
-            [status-im.utils.config :as config]
-            [status-im.utils.handlers :as handlers]
-            [status-im.utils.random :as random]
-            [status-im.utils.types :as types]
-            [status-im.utils.datetime :as datetime]
+            [status-im.protocol.core :as protocol] 
+            [status-im.utils.handlers :as handlers] 
+            [status-im.utils.types :as types] 
             [taoensso.timbre :as log]))
 
 (re-frame/reg-fx

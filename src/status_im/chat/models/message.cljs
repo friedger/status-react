@@ -14,7 +14,8 @@
   (get accounts current-account-id))
 
 (def receive-interceptors
-  [(re-frame/inject-cofx :random-id) (re-frame/inject-cofx :get-stored-message) re-frame/trim-v])
+  [(re-frame/inject-cofx :get-stored-message) (re-frame/inject-cofx :get-stored-chat)
+   (re-frame/inject-cofx :random-id) re-frame/trim-v])
 
 (defn- lookup-response-ref
   [access-scope->commands-responses account chat contacts response-name]

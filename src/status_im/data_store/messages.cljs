@@ -40,12 +40,6 @@
        (filter #(= (:content-type %) constants/content-type-log-message))
        (map #(select-keys % [:content :timestamp]))))
 
-(defn get-last-clock-value
-  [chat-id]
-  (if-let [message (data-store/get-last-message chat-id)]
-    (:clock-value message)
-    0))
-
 (defn get-unviewed
   [current-public-key]
   (into {}
