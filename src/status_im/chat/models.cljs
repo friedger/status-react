@@ -47,7 +47,7 @@
   (let [{:keys [chats deleted-chats]} db]
     (if (get deleted-chats chat-id) ;; when chat is deleted, don't change anything
       {:db db}
-      (let [chat (merge (or (dissoc (get chats chat-id) :contacts)
+      (let [chat (merge (or (get chats chat-id)
                             (create-new-chat cofx chat-id))
                         chat-props)]
         {:db        (update-in db [:chats chat-id] merge chat)
