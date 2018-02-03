@@ -49,7 +49,7 @@
      [status-bar/status-bar {:type :transparent}]
      [toolbar-view camera-flashlight]
      [react/text {:style (styles/qr-code-text dimensions)}
-      view]
+      (i18n/label :t/scan-qr-code)]
      [react/view {:style          styles/qr-container
                   :pointer-events :none}
       [react/with-activity-indicator

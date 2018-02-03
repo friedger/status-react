@@ -107,11 +107,11 @@
     :parent    :wallet-request-transaction
     :component wallet.components/request-assets}
 
-   {:view      :choose-recipient
+   #_{:view      :choose-recipient
     :parent    :wallet-send-transaction
     :component choose-recipient}
 
-   {:view      :wallet-transaction-sent
+   #_{:view      :wallet-transaction-sent
     :parent    :wallet-send-transaction
     :component transaction-sent}
 
@@ -176,7 +176,13 @@
                           (throw (str "Unknown view: " current-view)))]
           [(if android? menu-context view) common-styles/flex
            [view common-styles/flex
-            (if (and signed-up?
+            ;; TODO (goranjovic) - precompile seems to be causing issues on ios - multiple screens
+            ;; are rendered on top of each other and buttons of children are tappable even though they are not visible.
+            ;; This manifests if you open Wallet and then cannot go back to Home or Profile because
+            ;; main menu is inaccessible - instead you get bottom buttons from Send. And if you do tap Send,
+            ;; then you get the bottom button Cancel from its own child - QR scanner.
+            ;; I'm commenting until that is resolved.
+            #_(if (and signed-up?
                      (#{:home :wallet :my-profile :chat :wallet-send-transaction
                         :choose-recipient :wallet-transaction-sent :transactions-history
                         :unsigned-transactions :wallet-request-transaction :edit-my-profile
@@ -184,6 +190,7 @@
                       current-view))
               [root-view]
               [component])
+            [component]
             (when modal-view
               [view common-styles/modal
                [modal {:animation-type   :slide
