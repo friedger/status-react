@@ -188,7 +188,6 @@
       (not current-account-id)
       (update :dispatch-n concat [[:chat-received-message/add-when-commands-loaded console-chat/intro-message1]]))))
 
-
 (handlers/register-handler-fx
   :init-console-chat
   (fn [{:keys [db]} _]
