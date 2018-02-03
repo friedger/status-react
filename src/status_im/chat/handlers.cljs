@@ -58,11 +58,6 @@
                :callback #(dispatch [:incoming-message %1 %2])}))))))))
 
 (reg-fx
-  ::save-public-chat
-  (fn [chat]
-    (chats/save chat)))
-
-(reg-fx
   ::start-watching-group
   (fn [{:keys [group-id web3 current-public-key keypair]}]
     (protocol/start-watching-group!
@@ -86,16 +81,11 @@
       (merge
        (when-not exists?
          {:db (assoc-in db [:chats (:chat-id chat)] chat)
-          ::save-public-chat chat
+          :save-chat chat
           ::start-watching-group (merge {:group-id topic}
                                         (select-keys db [:web3 :current-public-key]))})
        {:dispatch-n [[:navigate-to-clean :home]
                      [:navigate-to-chat topic]]}))))
-
-(reg-fx
-  ::save-chat
-  (fn [new-chat]
-    (chats/save new-chat)))
 
 (reg-fx
   ::start-listen-group
@@ -157,7 +147,7 @@
       {:db (-> db
                (assoc-in [:chats (:chat-id new-chat)] new-chat)
                (assoc :group/selected-contacts #{}))
-       ::save-chat new-chat
+       :save-chat new-chat
        ::start-listen-group (merge {:new-chat new-chat}
                                    (select-keys db [:web3 :current-public-key]))
        :dispatch-n [[:navigate-to-clean :home]
