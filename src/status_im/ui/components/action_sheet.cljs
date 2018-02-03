@@ -21,4 +21,4 @@
 (defn show [{:keys [title message options]}]
   (.showActionSheetWithOptions (.-ActionSheetIOS rn-dependencies/react-native)
                                (prepare-options title message options)
-                               callback))
+                               (callback options)))
