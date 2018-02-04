@@ -100,7 +100,7 @@
 
 
 (defn profile-badge-edit [{:keys [name last-online] :as account}]
-  [react/view styles/profile-badge
+  [react/view styles/profile-badge-edit
    [react/touchable-highlight {:on-press #(list-selection/show {:title   (i18n/label :t/image-source-title)
                                                                 :options profile-icon-options})}
     [react/view styles/modal-menu
