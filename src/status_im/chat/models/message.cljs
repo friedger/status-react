@@ -100,7 +100,7 @@
 
 (def send-interceptors
   [(re-frame/inject-cofx :random-id) (re-frame/inject-cofx :random-id-seq)
-   (re-frame/inject-cofx :now) re-frame/trim-v])
+   (re-frame/inject-cofx :get-stored-chat) re-frame/trim-v])
 
 (defn- handle-message-from-bot [cofx {:keys [message chat-id]}]
   (when-let [message (cond

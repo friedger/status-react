@@ -475,7 +475,7 @@
 
 (handlers/register-handler-fx
   :send-current-message
-  [(re-frame/inject-cofx :random-id)]
+  message-model/send-interceptors 
   (fn [{{:keys [current-chat-id current-public-key] :as db} :db message-id :random-id current-time :now
         :as cofx} _]
     (when-not (get-in db [:chat-ui-props current-chat-id :sending-in-progress?])
