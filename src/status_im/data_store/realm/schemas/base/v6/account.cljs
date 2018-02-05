@@ -6,7 +6,6 @@
              :properties {:address             :string
                           :whisper-identity    :string
                           :name                {:type :string :optional true}
-                          :phone               {:type :string :optional true}
                           :email               {:type :string :optional true}
                           :status              {:type :string :optional true}
                           :debug?              {:type :bool :default false}
