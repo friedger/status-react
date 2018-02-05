@@ -367,7 +367,8 @@
   [re-frame/trim-v
    (re-frame/inject-cofx ::get-web3)
    (re-frame/inject-cofx ::get-chat-groups)
-   (re-frame/inject-cofx ::get-pending-messages)]
+   (re-frame/inject-cofx ::get-pending-messages)
+   (re-frame/inject-cofx :get-all-contacts)]
   (fn [{:keys [db web3 groups all-contacts pending-messages]} [current-account-id ethereum-rpc-url]]
     (let [{:keys [public-key status updates-public-key
                   updates-private-key]}

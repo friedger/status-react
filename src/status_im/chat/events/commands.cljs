@@ -31,7 +31,7 @@
          :contacts/keys [contacts]} db
         jail-id               (or bot jail-id chat-id)
         jail-command-name     (or content-command-name command-name)]
-    (if-not (get contacts jail-id) ;; bot is not event in contacts, do nothing
+    (if-not (get contacts jail-id) ;; bot is not even in contacts, do nothing
       {:db db}
       (if (get-in contacts [jail-id :jail-loaded?])
         (let [path        [(if (= :response (keyword type)) :responses :commands)
